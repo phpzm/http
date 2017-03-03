@@ -3,6 +3,7 @@
 namespace Simples\Http\Kernel;
 
 use ErrorException;
+use Simples\Http\Response;
 use Simples\Kernel\App as Kernel;
 use Simples\Http\Request;
 use Simples\Kernel\Container;
@@ -77,5 +78,19 @@ class App
     public static function route($uri)
     {
         return '//' . self::request()->getUrl() . '/' . ($uri{0} === '/' ? substr($uri, 1) : $uri);
+    }
+
+    /**
+     * Singleton to Response to keep only one instance for each request
+     *
+     * @return Response Response object populated by server data
+     */
+    public static function response()
+    {
+        $container = Container::box();
+        if (!$container->has('response')) {
+            $container->register('response', new Response());
+        }
+        return $container->get('response');
     }
 }

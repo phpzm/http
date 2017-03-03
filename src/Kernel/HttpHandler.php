@@ -6,6 +6,7 @@ use Simples\Error\SimplesRunTimeError;
 use Simples\Http\Controller;
 use Simples\Http\Request;
 use Simples\Http\Response;
+use Simples\Kernel\Container;
 use Simples\Route\Match;
 use Simples\Kernel\Wrapper;
 use Throwable;

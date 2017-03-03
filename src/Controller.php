@@ -3,6 +3,7 @@
 namespace Simples\Http;
 
 use Simples\Kernel\App;
+use Simples\Http\Kernel\App as Http;
 use Simples\Route\Match;
 
 /**
@@ -115,6 +116,9 @@ abstract class Controller
      */
     final protected function request()
     {
+        if (!$this->request) {
+            $this->request = Http::request();
+        }
         return $this->request;
     }
 
@@ -123,6 +127,9 @@ abstract class Controller
      */
     final protected function response()
     {
+        if (!$this->response) {
+            $this->response = Http::response();
+        }
         return $this->response;
     }
 
