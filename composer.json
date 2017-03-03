@@ -1,0 +1,38 @@
+{
+  "name": "phpzm/http",
+  "description": "Simples Http package",
+  "minimum-stability": "dev",
+  "keywords": [
+    "php",
+    "framework",
+    "api",
+    "simples"
+  ],
+  "homepage": "https://github.com/phpzm/http",
+  "license": "MIT",
+  "version": "1.0.0",
+  "type": "package",
+  "authors": [
+    {
+      "name": "William",
+      "email": "wilcorrea@gmail.com"
+    },
+    {
+      "name": "Ezio",
+      "email": "ezioadsr@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "phpzm/helper": "dev-master",
+    "phpzm/kernel": "dev-master",
+    "phpzm/route": "dev-master",
+    "psr/http-message": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Simples\\Http\\Error\\": "src/Error/",
+      "Simples\\Http\\": "src/"
+    }
+  }
+}
