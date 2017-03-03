@@ -9,6 +9,7 @@ use Simples\Http\Response;
 use Simples\Kernel\Container;
 use Simples\Route\Match;
 use Simples\Kernel\Wrapper;
+use Simples\Kernel\App as Kernel;
 use Throwable;
 
 /**
@@ -191,7 +192,7 @@ class HttpHandler extends Response
                 break;
             }
             case TYPE_STRING: {
-                $peaces = explode(App::options('separator'), $callback);
+                $peaces = explode(Kernel::options('separator'), $callback);
                 $class = $peaces[0];
                 $method = camelize(substr($this->match()->getUri(), 1, -1), false);
                 if (isset($peaces[1])) {
@@ -278,12 +279,12 @@ class HttpHandler extends Response
             $status = 500;
             if ($content instanceof SimplesRunTimeError) {
                 $status = $content->getStatus();
-                $meta = array_merge($meta, error_format($content));
             }
+            $meta = array_merge($meta, error_format($content));
             $content = throw_format($content);
         }
 
-        $method = App::options('type');
+        $method = Kernel::options('type');
 
         return $this->$method($content, $status, $meta);
     }
