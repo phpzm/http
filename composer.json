@@ -31,7 +31,6 @@
   },
   "autoload": {
     "psr-4": {
-      "Simples\\Http\\Error\\": "src/Error/",
       "Simples\\Http\\": "src/"
     }
   }
