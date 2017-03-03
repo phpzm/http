@@ -3,7 +3,6 @@
 namespace Simples\Http;
 
 use Simples\Helper\JSON;
-use Simples\Kernel\App;
 
 /**
  * @method Response atom($data, $code = 200)
@@ -103,7 +102,6 @@ class Response extends ResponseStream
     public function __call($name, $arguments)
     {
         $this->write($this->toString(off($arguments, 0, null)));
-
         $this->header('content-type', off(self::CONTENT_TYPES, $name, self::CONTENT_TYPE_UNKNOWN));
 
         if (off($arguments, 1)) {
@@ -126,7 +124,7 @@ class Response extends ResponseStream
         if (in_array(gettype($data), $scalars)) {
             return (string)$data;
         }
-        return json_encode($data, JSON_NUMERIC_CHECK);
+        return JSON::encode($data, JSON_NUMERIC_CHECK);
     }
 
     /**
