@@ -58,12 +58,4 @@ class Input
         }
         return $this->value;
     }
-
-    /**
-     * @return mixed
-     */
-    public function __toString()
-    {
-        return $this->filterString();
-    }
 }
