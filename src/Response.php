@@ -131,7 +131,7 @@ class Response extends ResponseStream
      * @param $origin
      * @return $this
      */
-    public function cors($origin)
+    public function configureResponseCORS($origin)
     {
         return
             $this

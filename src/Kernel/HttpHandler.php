@@ -4,6 +4,7 @@ namespace Simples\Http\Kernel;
 
 use Simples\Error\SimplesRunTimeError;
 use Simples\Http\Controller;
+use Simples\Http\Error\SimplesForbiddenError;
 use Simples\Http\Request;
 use Simples\Http\Response;
 use Simples\Kernel\Container;
@@ -70,22 +71,6 @@ class HttpHandler extends Response
     }
 
     /**
-     * @return bool
-     */
-    private function isCors()
-    {
-        return (boolean)off($this->match()->getOptions(), 'cors');
-    }
-
-    /**
-     * @return bool
-     */
-    private function isPreFlight()
-    {
-        return strtolower($this->request()->getMethod()) === 'options';
-    }
-
-    /**
      * @param $content
      * @return bool
      */
@@ -100,23 +85,55 @@ class HttpHandler extends Response
     public function apply()
     {
         $response = $this->resolve();
-        if ($this->isCors()) {
-            $response->cors($this->request()->getHeader($this->__headerOrigin));
+        if ($this->isCORS()) {
+            $response->configureResponseCORS($this->request()->getHeader($this->__headerOrigin));
         }
 
         return $response;
     }
 
     /**
-     * @return Response
+     * @return bool
+     */
+    private function isCORS()
+    {
+        return (boolean)off($this->match()->getOptions(), 'cors');
+    }
+
+    /**
+     * @return bool
+     */
+    private function isPreFlightCORS()
+    {
+        return strtolower($this->request()->getMethod()) === 'options';
+    }
+
+    /**
+     * @return $this
+     * @throws SimplesForbiddenError
+     */
+    private function allowAccessCORS()
+    {
+        $origin = $this->request()->getHeader($this->__headerOrigin);
+        $verbs = $this->request()->getHeader($this->__headerAccessControlRequestHeaders);
+        $allowed = off($this->match()->getOptions(), 'cors');
+
+        if (is_string($allowed) && $origin !== $allowed) {
+            throw new SimplesForbiddenError("The origin `{$origin}` is not allowed");
+        }
+        if (is_array($allowed) && !in_array($origin, $allowed)) {
+            throw new SimplesForbiddenError("The origin `{$origin}` is not in allowed list");
+        }
+        return $this->configureResponseCORS($origin)->preFlight($verbs);
+    }
+
+    /**
+     * @return HttpHandler|Response
      */
     final private function resolve()
     {
-        if ($this->isCors() && $this->isPreFlight()) {
-            return
-                $this
-                    ->cors($this->request()->getHeader($this->__headerOrigin))
-                    ->preFlight($this->request()->getHeader($this->__headerAccessControlRequestHeaders));
+        if ($this->isCORS() && $this->isPreFlightCORS()) {
+            return $this->allowAccessCORS();
         }
 
         /** @var mixed $callback */

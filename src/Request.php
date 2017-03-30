@@ -95,8 +95,8 @@ class Request implements RequestInterface
     private function getMethodFromServer()
     {
         $method = server('REQUEST_METHOD');
-        $method = iif(get('_method'), $method);
-        $method = iif(post('_method'), $method);
+        $method = coalesce(get('_method'), $method);
+        $method = coalesce(post('_method'), $method);
         $this->method = strtolower($method);
 
         return $this;
