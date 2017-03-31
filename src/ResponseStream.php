@@ -128,7 +128,6 @@ class ResponseStream implements ResponseInterface
     }
 
     /**
-     * @SuppressWarnings("BooleanArgumentFlag")
      *
      * @param $string
      * @param bool $override

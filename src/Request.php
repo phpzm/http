@@ -54,7 +54,6 @@ class Request implements RequestInterface
     private $target = '';
 
     /**
-     * @SuppressWarnings("BooleanArgumentFlag")
      *
      * Request constructor.
      * @param boolean $strict
@@ -530,7 +529,6 @@ class Request implements RequestInterface
     }
 
     /**
-     * @SuppressWarnings("BooleanArgumentFlag")
      *
      * Returns an instance with the provided URI.
      *

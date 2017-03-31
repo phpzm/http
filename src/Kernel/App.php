@@ -17,7 +17,6 @@ use Throwable;
 class App
 {
     /**
-     * @SuppressWarnings("BooleanArgumentFlag")
      * Used to catch http requests and handle response to their
      *
      * @param bool $output (true) Define if the method will generate one output with the response
