@@ -7,10 +7,10 @@ use Simples\Http\Controller;
 use Simples\Http\Error\SimplesForbiddenError;
 use Simples\Http\Request;
 use Simples\Http\Response;
-use Simples\Kernel\Container;
-use Simples\Route\Match;
-use Simples\Kernel\Wrapper;
 use Simples\Kernel\App as Kernel;
+use Simples\Kernel\Container;
+use Simples\Kernel\Wrapper;
+use Simples\Route\Match;
 use Throwable;
 
 /**
@@ -167,7 +167,7 @@ class HttpHandler extends Response
             $class = $callable['class'];
 
             /** @var \Simples\Http\Controller $controller */
-            $controller = Container::box()->make($class);
+            $controller = Container::instance()->make($class);
             if (!($controller instanceof Controller)) {
                 throw new SimplesRunTimeError("The class must be a instance of Controller, `{$class}` given");
             }
@@ -193,7 +193,7 @@ class HttpHandler extends Response
     private function getCallable($callback): array
     {
         switch (gettype($callback)) {
-            case TYPE_ARRAY: {
+            case TYPE_ARRAY:
                 if (isset($callback[0]) && isset($callback[1])) {
                     return [
                         'class' => $callback[0],
@@ -207,8 +207,7 @@ class HttpHandler extends Response
                     ];
                 }
                 break;
-            }
-            case TYPE_STRING: {
+            case TYPE_STRING:
                 $peaces = explode(Kernel::options('separator'), $callback);
                 $class = $peaces[0];
                 $method = camelize(substr($this->match()->getUri(), 1, -1), false);
@@ -219,7 +218,6 @@ class HttpHandler extends Response
                     'class' => $class,
                     'method' => $method
                 ];
-            }
         }
         return [];
     }
@@ -236,9 +234,9 @@ class HttpHandler extends Response
 
         $labels = isset($options['labels']) ? $options['labels'] : true;
         if ($method) {
-            return Container::box()->resolveMethodParameters($callable, $method, $data, $labels);
+            return Container::instance()->resolveMethodParameters($callable, $method, $data, $labels);
         }
-        return Container::box()->resolveFunctionParameters($callable, $data, $labels);
+        return Container::instance()->resolveFunctionParameters($callable, $data, $labels);
     }
 
     /**

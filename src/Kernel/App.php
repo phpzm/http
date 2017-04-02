@@ -58,7 +58,7 @@ class App
      */
     public static function request()
     {
-        $container = Container::box();
+        $container = Container::instance();
         if (!$container->has('request')) {
             $request = new Request(Kernel::options('strict'));
             $container->register('request', $request->fromServer());
@@ -86,7 +86,7 @@ class App
      */
     public static function response()
     {
-        $container = Container::box();
+        $container = Container::instance();
         if (!$container->has('response')) {
             $container->register('response', new Response());
         }

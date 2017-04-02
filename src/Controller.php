@@ -94,7 +94,7 @@ abstract class Controller
      * @param Match $match
      * @return $this
      */
-    public final function boot(Request $request, Response $response, Match $match)
+    final public function boot(Request $request, Response $response, Match $match)
     {
         $this->request = $request;
         $this->response = $response;
@@ -160,7 +160,7 @@ abstract class Controller
      */
     public function setLog($logging)
     {
-        App::log($logging && env('TEST_MODE'));
+        App::logging($logging && env('TEST_MODE'));
     }
 
     /**

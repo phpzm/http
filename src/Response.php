@@ -68,10 +68,10 @@ class Response extends ResponseStream
     /**
      * @var array
      */
-    const CONTENT_TYPES = [
-        'atom' => 'application/atom+xml', 'css' => 'text/css', 'html' => 'text/html; charset=UTF-8', 'jpeg' => 'image/jpeg',
-        'json' => 'application/json', 'pdf' => 'application/pdf', 'rss' => 'application/rss+xml; charset=ISO-8859-1',
-        'plain' => 'text/plain', 'xml' => 'text/xml'
+    protected static $CONTENT_TYPES = [
+        'atom' => 'application/atom+xml', 'css' => 'text/css', 'html' => 'text/html; charset=UTF-8',
+        'jpeg' => 'image/jpeg', 'json' => 'application/json', 'pdf' => 'application/pdf',
+        'rss' => 'application/rss+xml; charset=ISO-8859-1', 'plain' => 'text/plain', 'xml' => 'text/xml'
     ];
 
     /**
@@ -102,7 +102,7 @@ class Response extends ResponseStream
     public function __call($name, $arguments)
     {
         $this->write($this->toString(off($arguments, 0, null)));
-        $this->header('content-type', off(self::CONTENT_TYPES, $name, self::CONTENT_TYPE_UNKNOWN));
+        $this->header('content-type', off(static::$CONTENT_TYPES, $name, static::CONTENT_TYPE_UNKNOWN));
 
         if (off($arguments, 1)) {
             return $this->withStatus(off($arguments, 1));
@@ -133,11 +133,10 @@ class Response extends ResponseStream
      */
     public function configureResponseCORS($origin)
     {
-        return
-            $this
-                ->header('Access-Control-Allow-Origin', $origin)
-                ->header('Access-Control-Allow-Credentials', 'true')
-                ->header('Access-Control-Max-Age', '86400');
+        return $this
+            ->header('Access-Control-Allow-Origin', $origin)
+            ->header('Access-Control-Allow-Credentials', 'true')
+            ->header('Access-Control-Max-Age', '86400');
     }
 
     /**

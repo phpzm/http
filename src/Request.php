@@ -5,7 +5,7 @@ namespace Simples\Http;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use Simples\Kernel\Http;
+use Simples\Http\Kernel\Http;
 
 /**
  * Class Request
