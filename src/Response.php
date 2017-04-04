@@ -17,6 +17,8 @@ use Simples\Helper\JSON;
  *
  * Class Response
  * @package Simples\Http
+ *
+ * @SuppressWarnings("camelCasePropertyName")
  */
 class Response extends ResponseStream
 {

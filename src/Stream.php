@@ -110,8 +110,8 @@ class Stream implements StreamInterface
     {
         $error = null;
         if (!is_resource($resource) && is_string($resource)) {
-            set_error_handler(function ($e) use (&$error) {
-                $error = $e;
+            set_error_handler(function ($exception) use (&$error) {
+                $error = $exception;
             }, E_WARNING);
             $resource = fopen($resource, $mode);
             restore_error_handler();

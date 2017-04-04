@@ -24,22 +24,22 @@ class HttpHandler extends Response
     /**
      * @var Request
      */
-    private $__request;
+    private $REQUEST;
 
     /**
      * @var Match
      */
-    private $__match;
+    private $MATCH;
 
     /**
      * @var string
      */
-    private $__headerOrigin = 'Origin';
+    private $headerOrigin = 'Origin';
 
     /**
      * @var string
      */
-    private $__headerAccessControlRequestHeaders = 'Access-Control-Request-Headers';
+    private $headerAccessControlRequestHeaders = 'Access-Control-Request-Headers';
 
     /**
      * HandlerHttp constructor.
@@ -50,8 +50,8 @@ class HttpHandler extends Response
     {
         parent::__construct();
 
-        $this->__request = $request;
-        $this->__match = $match;
+        $this->REQUEST = $request;
+        $this->MATCH = $match;
     }
 
     /**
@@ -59,7 +59,7 @@ class HttpHandler extends Response
      */
     public function request()
     {
-        return $this->__request;
+        return $this->REQUEST;
     }
 
     /**
@@ -67,7 +67,7 @@ class HttpHandler extends Response
      */
     public function match()
     {
-        return $this->__match;
+        return $this->MATCH;
     }
 
     /**
@@ -86,7 +86,7 @@ class HttpHandler extends Response
     {
         $response = $this->resolve();
         if ($this->isCORS()) {
-            $response->configureResponseCORS($this->request()->getHeader($this->__headerOrigin));
+            $response->configureResponseCORS($this->request()->getHeader($this->headerOrigin));
         }
 
         return $response;
@@ -114,8 +114,8 @@ class HttpHandler extends Response
      */
     private function allowAccessCORS()
     {
-        $origin = $this->request()->getHeader($this->__headerOrigin);
-        $verbs = $this->request()->getHeader($this->__headerAccessControlRequestHeaders);
+        $origin = $this->request()->getHeader($this->headerOrigin);
+        $verbs = $this->request()->getHeader($this->headerAccessControlRequestHeaders);
         $allowed = off($this->match()->getOptions(), 'cors');
 
         if (is_string($allowed) && $origin !== $allowed) {
