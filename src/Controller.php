@@ -2,8 +2,8 @@
 
 namespace Simples\Http;
 
-use Simples\Kernel\App;
 use Simples\Http\Kernel\App as Http;
+use Simples\Kernel\App;
 use Simples\Route\Match;
 
 /**
@@ -109,7 +109,7 @@ abstract class Controller
      * @param int $code
      * @return Response
      */
-    abstract protected function answer($content = null, $meta = [], $code = 200) : Response;
+    abstract protected function answer($content = null, $meta = [], $code = 200): Response;
 
     /**
      * @return Request
@@ -168,24 +168,30 @@ abstract class Controller
      * @param $arguments
      * @return Response
      */
-    public function __call($name, $arguments)
+    public function __call($name, $arguments): Response
     {
-        $httpStatusCodes = ResponseStream::HTTP_STATUS_CODE;
-
         $content = off($arguments, 0, '');
         $meta = off($arguments, 1, []);
         $code = 501;
 
         if (substr($name, 0, 6) === 'answer') {
-            $reasonPhrase = substr($name, 6);
-            foreach ($httpStatusCodes as $statusCode => $statusReasonPhrase) {
-                if ($reasonPhrase === str_replace([' ', '-'], '', $statusReasonPhrase)) {
-                    $code = $statusCode;
-                    break;
-                }
+            $code = $this->searchCode(substr($name, 6), $code);
+        }
+        return $this->answer($content, $meta, $code);
+    }
+
+    /**
+     * @param string $reasonPhrase
+     * @param int $default (0)
+     * @return int
+     */
+    private function searchCode(string $reasonPhrase, int $default = 0): int
+    {
+        foreach (ResponseStream::HTTP_STATUS_CODE as $statusCode => $statusReasonPhrase) {
+            if ($reasonPhrase === str_replace([' ', '-'], '', $statusReasonPhrase)) {
+                return (int)$statusCode;
             }
         }
-
-        return $this->answer($content, $meta, $code);
+        return $default;
     }
 }

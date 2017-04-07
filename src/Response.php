@@ -71,9 +71,15 @@ class Response extends ResponseStream
      * @var array
      */
     protected static $CONTENT_TYPES = [
-        'atom' => 'application/atom+xml', 'css' => 'text/css', 'html' => 'text/html; charset=UTF-8',
-        'jpeg' => 'image/jpeg', 'json' => 'application/json', 'pdf' => 'application/pdf',
-        'rss' => 'application/rss+xml; charset=ISO-8859-1', 'plain' => 'text/plain', 'xml' => 'text/xml'
+        'atom' => 'application/atom+xml',
+        'css' => 'text/css',
+        'html' => 'text/html; charset=UTF-8',
+        'jpeg' => 'image/jpeg',
+        'json' => 'application/json',
+        'pdf' => 'application/pdf',
+        'rss' => 'application/rss+xml; charset=ISO-8859-1',
+        'plain' => 'text/plain',
+        'xml' => 'text/xml'
     ];
 
     /**
@@ -179,21 +185,23 @@ class Response extends ResponseStream
     public function meta($property, $value)
     {
         $contents = $this->getBody()->getContents();
-        if (JSON::isJson($contents)) {
-            $contents = JSON::decode($contents);
-            if (gettype($contents) === TYPE_OBJECT) {
-                if (isset($contents->meta)) {
-                    if (gettype($contents->meta) === TYPE_OBJECT) {
-                        /** @noinspection PhpVariableVariableInspection */
-                        $contents->meta->$property = $value;
-                    }
-                    if (gettype($contents->meta) === TYPE_ARRAY) {
-                        $contents->meta[$property] = $value;
-                    }
-                }
-                $this->write(JSON::encode($contents), true);
+        if (!JSON::isJson($contents)) {
+            return $this;
+        }
+        $contents = JSON::decode($contents);
+        if (!type($contents, TYPE_OBJECT)) {
+            return $this;
+        }
+        if (isset($contents->meta)) {
+            if (type($contents->meta, TYPE_OBJECT)) {
+                /** @noinspection PhpVariableVariableInspection */
+                $contents->meta->$property = $value;
+            }
+            if (type($contents->meta, TYPE_ARRAY)) {
+                $contents->meta[$property] = $value;
             }
         }
+        $this->write(JSON::encode($contents), true);
         return $this;
     }
 

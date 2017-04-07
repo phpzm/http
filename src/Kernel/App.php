@@ -32,9 +32,7 @@ class App
         try {
             $response = $http->handler();
             if ($response->isSuccess()) {
-                if (!Transaction::commit()) {
-                    throw new ErrorException("Transaction can't commit the changes");
-                }
+                static::commit();
             }
         } catch (Throwable $throw) {
             $fail = $throw;
@@ -49,6 +47,18 @@ class App
         }
 
         return $response;
+    }
+
+    /**
+     * Make a global commit of all changes made into request
+     *
+     * @throws ErrorException Generated when is not possible commit the changes
+     */
+    private static function commit()
+    {
+        if (!Transaction::commit()) {
+            throw new ErrorException("Transaction can't commit the changes");
+        }
     }
 
     /**
