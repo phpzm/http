@@ -2,9 +2,9 @@
 
 namespace Simples\Http\Kernel;
 
-use Simples\Kernel\App as Kernel;
 use Simples\Http\Request;
 use Simples\Http\Response;
+use Simples\Kernel\App as Kernel;
 use Simples\Route\Match;
 use Simples\Route\Router;
 use Throwable;
@@ -40,18 +40,18 @@ class Http
     }
 
     /**
+     * @param array $pipe
      * @return Response
      */
-    public function handler(): Response
+    public function handler(array $pipe = []): Response
     {
         // TODO: container
         $router = new Router(Kernel::options('labels'), Kernel::options('type'));
 
-        // TODO: make routes here
         /** @var Match $match */
         $this->match = static::routes($router)->match($this->request->getMethod(), $this->request->getUri());
 
-        $handler = new HttpHandler($this->request, $this->match);
+        $handler = new Handler($this->request, $this->match, $pipe);
 
         return $handler->apply();
     }
@@ -91,7 +91,7 @@ class Http
         }
         $this->match->setCallback($fail);
 
-        $handler = new HttpHandler($this->request, $this->match);
+        $handler = new Handler($this->request, $this->match);
 
         return $handler->apply();
     }

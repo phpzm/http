@@ -4,7 +4,7 @@ namespace Simples\Http\Kernel;
 
 use Simples\Error\SimplesRunTimeError;
 use Simples\Http\Controller;
-use Simples\Http\Error\SimplesForbiddenError;
+use Simples\Http\Middleware\HttpResponse;
 use Simples\Http\Request;
 use Simples\Http\Response;
 use Simples\Kernel\App as Kernel;
@@ -24,34 +24,36 @@ class HttpHandler extends Response
     /**
      * @var Request
      */
-    private $REQUEST;
+    private $request;
 
     /**
      * @var Match
      */
-    private $MATCH;
+    private $match;
 
     /**
-     * @var string
+     * @var array
      */
-    private $headerOrigin = 'Origin';
+    private $pipe;
 
     /**
-     * @var string
+     * @var callable
      */
-    private $headerAccessControlRequestHeaders = 'Access-Control-Request-Headers';
+    protected static $NEXT;
 
     /**
      * HandlerHttp constructor.
      * @param Request $request
      * @param Match $match
+     * @param array $pipe ([])
      */
-    public function __construct(Request $request, Match $match)
+    public function __construct(Request $request, Match $match, array $pipe = [])
     {
         parent::__construct();
 
-        $this->REQUEST = $request;
-        $this->MATCH = $match;
+        $this->request = $request;
+        $this->match = $match;
+        $this->pipe = $pipe;
     }
 
     /**
@@ -59,7 +61,7 @@ class HttpHandler extends Response
      */
     public function request()
     {
-        return $this->REQUEST;
+        return $this->request;
     }
 
     /**
@@ -67,7 +69,7 @@ class HttpHandler extends Response
      */
     public function match()
     {
-        return $this->MATCH;
+        return $this->match;
     }
 
     /**
@@ -84,47 +86,28 @@ class HttpHandler extends Response
      */
     public function apply()
     {
-        $response = $this->resolve();
-        if ($this->isCORS()) {
-            $response->configureResponseCORS($this->request()->getHeader($this->headerOrigin));
+        $pipe = $this->match()->getOption('pipe');
+        if (!is_array($pipe)) {
+            return $this->resolve();
         }
 
-        return $response;
-    }
+        $middlewares = array_filter($this->pipe, function ($middleWare) use ($pipe) {
+            return in_array($middleWare->alias(), $pipe);
+        });
 
-    /**
-     * @return bool
-     */
-    private function isCORS()
-    {
-        return (boolean)off($this->match()->getOptions(), 'cors');
-    }
-
-    /**
-     * @return bool
-     */
-    private function isPreFlightCORS()
-    {
-        return strtolower($this->request()->getMethod()) === 'options';
-    }
-
-    /**
-     * @return $this
-     * @throws SimplesForbiddenError
-     */
-    private function allowAccessCORS()
-    {
-        $origin = $this->request()->getHeader($this->headerOrigin);
-        $verbs = $this->request()->getHeader($this->headerAccessControlRequestHeaders);
-        $allowed = off($this->match()->getOptions(), 'cors');
-
-        if (is_string($allowed) && $origin !== $allowed) {
-            throw new SimplesForbiddenError("The origin `{$origin}` is not allowed");
+        if (!count($middlewares)) {
+            return $this->resolve();
         }
-        if (is_array($allowed) && !in_array($origin, $allowed)) {
-            throw new SimplesForbiddenError("The origin `{$origin}` is not in allowed list");
-        }
-        return $this->configureResponseCORS($origin)->preFlight($verbs);
+
+        $that = $this;
+
+        $middlewares[] = new HttpResponse(function () use ($that) {
+            return $that->resolve();
+        });
+
+        $delegate = new Delegate($middlewares);
+
+        return $delegate->process($this->request());
     }
 
     /**
@@ -132,10 +115,6 @@ class HttpHandler extends Response
      */
     final private function resolve()
     {
-        if ($this->isCORS() && $this->isPreFlightCORS()) {
-            return $this->allowAccessCORS();
-        }
-
         /** @var mixed $callback */
         $callback = $this->match()->getCallback();
 

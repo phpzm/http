@@ -19,18 +19,18 @@ class App
     /**
      * Used to catch http requests and handle response to their
      *
+     * @param array $pipe Resume of middlewares to be solved
      * @param bool $output (true) Define if the method will generate one output with the response
      * @return mixed The match response for requested resource
-     * @throws ErrorException Generated when is not possible commit the changes
      */
-    public static function handler(bool $output = true)
+    public static function handle(array $pipe = [], bool $output = true)
     {
         $fail = null;
         $response = null;
 
         $http = new Http(self::request());
         try {
-            $response = $http->handler();
+            $response = $http->handler($pipe);
             if ($response->isSuccess()) {
                 static::commit();
             }
@@ -92,7 +92,7 @@ class App
     /**
      * Singleton to Response to keep only one instance for each request
      *
-     * @return Response Response object populated by server data
+     * @return Response The Response object to populated by request resolution
      */
     public static function response()
     {
