@@ -31,6 +31,11 @@ class Http
     private $match;
 
     /**
+     * @var string
+     */
+    private $headerAccessControlRequestMethod = 'Access-Control-Request-Method';
+
+    /**
      * Http constructor.
      * @param Request $request
      */
@@ -48,8 +53,12 @@ class Http
         // TODO: container
         $router = new Router(Kernel::options('labels'), Kernel::options('type'));
 
+        $method = $this->request->getMethod();
+        if ($this->request->hasHeader($this->headerAccessControlRequestMethod)) {
+            $method = $this->request->getHeader($this->headerAccessControlRequestMethod);
+        }
         /** @var Match $match */
-        $this->match = static::routes($router)->match($this->request->getMethod(), $this->request->getUri());
+        $this->match = static::routes($router)->match($method, $this->request->getUri());
 
         $handler = new Handler($this->request, $this->match, $pipe);
 
