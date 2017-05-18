@@ -14,12 +14,10 @@ use Simples\Route\Match;
 use Throwable;
 
 /**
- * Class HandlerHttp
- * @package Simples\Kernel
- *
- * @SuppressWarnings("camelCasePropertyName")
+ * Class Handler
+ * @package Simples\Http\Kernel
  */
-class HttpHandler extends Response
+class Handler extends Response
 {
     /**
      * @var Request
@@ -35,11 +33,6 @@ class HttpHandler extends Response
      * @var array
      */
     private $pipe;
-
-    /**
-     * @var callable
-     */
-    protected static $NEXT;
 
     /**
      * HandlerHttp constructor.
@@ -111,7 +104,7 @@ class HttpHandler extends Response
     }
 
     /**
-     * @return HttpHandler|Response
+     * @return Handler|Response
      */
     final private function resolve()
     {
