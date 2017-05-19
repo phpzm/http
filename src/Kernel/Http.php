@@ -2,6 +2,7 @@
 
 namespace Simples\Http\Kernel;
 
+use Psr\Http\Message\ResponseInterface;
 use Simples\Http\Request;
 use Simples\Http\Response;
 use Simples\Kernel\App as Kernel;
@@ -45,10 +46,10 @@ class Http
     }
 
     /**
-     * @param array $pipe
-     * @return Response
+     * @param array $middlewares
+     * @return ResponseInterface|Response
      */
-    public function handler(array $pipe = []): Response
+    public function handle(array $middlewares = []): Response
     {
         // TODO: container
         $router = new Router(Kernel::options('labels'), Kernel::options('type'));
@@ -60,9 +61,7 @@ class Http
         /** @var Match $match */
         $this->match = static::routes($router)->match($method, $this->request->getUri());
 
-        $handler = new Handler($this->request, $this->match, $pipe);
-
-        return $handler->apply();
+        return (new Handler)->apply($this->request, $this->match, $middlewares);
     }
 
     /**
@@ -85,9 +84,9 @@ class Http
 
     /**
      * @param Throwable $fail
-     * @return Response
+     * @return ResponseInterface
      */
-    public function fallback(Throwable $fail): Response
+    public function fallback(Throwable $fail)
     {
         if (!$this->match) {
             $method = '';
@@ -100,9 +99,9 @@ class Http
         }
         $this->match->setCallback($fail);
 
-        $handler = new Handler($this->request, $this->match);
+        $handler = new Handler();
 
-        return $handler->apply();
+        return $handler->apply($this->request, $this->match);
     }
 
     /**

@@ -19,18 +19,18 @@ class App
     /**
      * Used to catch http requests and handle response to their
      *
-     * @param array $pipe Resume of middlewares to be solved
+     * @param array $middlewares Resume of middlewares to be solved
      * @param bool $output (true) Define if the method will generate one output with the response
      * @return mixed The match response for requested resource
      */
-    public static function handle(array $pipe = [], bool $output = true)
+    public static function handle(array $middlewares = [], bool $output = true)
     {
         $fail = null;
         $response = null;
 
         $http = new Http(self::request());
         try {
-            $response = $http->handler($pipe);
+            $response = $http->handle($middlewares);
             if ($response->isSuccess()) {
                 static::commit();
             }

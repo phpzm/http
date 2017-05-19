@@ -2,6 +2,7 @@
 
 namespace Simples\Http\Kernel;
 
+use Psr\Http\Message\ResponseInterface;
 use Simples\Error\SimplesRunTimeError;
 use Simples\Http\Controller;
 use Simples\Http\Middleware\HttpResponse;
@@ -20,120 +21,103 @@ use Throwable;
 class Handler extends Response
 {
     /**
-     * @var Request
+     * Handler constructor.
      */
-    private $request;
-
-    /**
-     * @var Match
-     */
-    private $match;
-
-    /**
-     * @var array
-     */
-    private $pipe;
-
-    /**
-     * HandlerHttp constructor.
-     * @param Request $request
-     * @param Match $match
-     * @param array $pipe ([])
-     */
-    public function __construct(Request $request, Match $match, array $pipe = [])
+    public function __construct()
     {
         parent::__construct();
-
-        $this->request = $request;
-        $this->match = $match;
-        $this->pipe = $pipe;
     }
 
     /**
-     * @return Request
-     */
-    public function request()
-    {
-        return $this->request;
-    }
-
-    /**
-     * @return Match
-     */
-    public function match()
-    {
-        return $this->match;
-    }
-
-    /**
+     * Check if content is a instance of Response
+     *
      * @param $content
      * @return bool
      */
     private function isResponse($content)
     {
+        // test if the content is an instance of Response
         return $content instanceof Response;
     }
 
     /**
-     * @return mixed
+     * Apply the middlewares to Match
+     *
+     * @param Request $request
+     * @param Match $match
+     * @param array $middlewares ([])
+     * @return ResponseInterface
      */
-    public function apply()
+    public function apply(Request $request, Match $match, array $middlewares = [])
     {
-        $pipe = $this->match()->getOption('pipe');
-        if (!is_array($pipe)) {
-            return $this->resolve();
-        }
+        // get the pipe of route selected by router
+        $pipe = $match->getOption('pipe');
 
-        $middlewares = array_filter($this->pipe, function ($middleWare) use ($pipe) {
+        // check if pipe is valid
+        if (!is_array($pipe)) {
+            // early return
+            return $this->resolve($request, $match);
+        }
+        // filter the middlewares using the pipe of match
+        $piping = array_filter($middlewares, function ($middleWare) use ($pipe) {
+            // check if alias of middleware is in pipe
             return in_array($middleWare->alias(), $pipe);
         });
 
-        if (!count($middlewares)) {
-            return $this->resolve();
+        // check if exists valid middlewares
+        if (!count($piping)) {
+            // early return
+            return $this->resolve($request, $match);
         }
 
+        // inject the handler into the HttpResponse middleware
         $that = $this;
-
-        $middlewares[] = new HttpResponse(function () use ($that) {
-            return $that->resolve();
+        $piping[] = new HttpResponse(function () use ($that, $request, $match) {
+            // resolve the request using the match
+            return $that->resolve($request, $match);
         });
 
-        $delegate = new Delegate($middlewares);
+        // create a delegate with the middlewares
+        $delegate = new Delegate($piping);
 
-        return $delegate->process($this->request());
+        // start the pipe
+        return $delegate->process($request);
     }
 
     /**
-     * @return Handler|Response
+     * @param Request $request
+     * @param Match $match
+     * @return Response
      */
-    final private function resolve()
+    final private function resolve(Request $request, Match $match)
     {
         /** @var mixed $callback */
-        $callback = $this->match()->getCallback();
+        $callback = $match->getCallback();
 
         if (!$callback) {
-            return $this->parse(null);
+            return $this->parse($match, null);
         }
 
         if ($callback instanceof Throwable) {
-            return $this->parse($callback);
+            return $this->parse($match, $callback);
         }
 
         if (gettype($callback) !== TYPE_OBJECT) {
-            return $this->controller($callback);
+            return $this->controller($request, $match);
         }
 
-        return $this->call($callback->bindTo($this), $this->parameters($callback));
+        return $this->call($match, $callback->bindTo($this), $this->parameters($match));
     }
 
     /**
-     * @param $callback
+     * @param Request $request
+     * @param Match $match
      * @return Response
      * @throws SimplesRunTimeError
      */
-    private function controller($callback)
+    private function controller(Request $request, Match $match)
     {
-        $callable = $this->getCallable($callback);
+        $callable = $this->getCallable($match);
 
         if (isset($callable['class'])) {
             $class = $callable['class'];
@@ -143,7 +127,7 @@ class Handler extends Response
             if (!($controller instanceof Controller)) {
                 throw new SimplesRunTimeError("The class must be a instance of Controller, `{$class}` given");
             }
-            $controller->boot($this->request(), $this, $this->match());
+            $controller->boot($request, $this, $match);
 
             $method = $callable['method'] ?? null;
             /** @noinspection PhpParamsInspection */
@@ -151,19 +135,22 @@ class Handler extends Response
                 $method = '__invoke';
             }
             if ($method) {
-                return $this->call([$controller, $method], $this->parameters($controller, $method));
+                $parameters = $this->parameters($match, $controller, $method);
+                return $this->call($match, [$controller, $method], $parameters);
             }
         }
 
-        return $this->parse(null);
+        return $this->parse($match, null);
     }
 
     /**
-     * @param $callback
+     * @param Match $match
      * @return array
      */
-    private function getCallable($callback): array
+    private function getCallable(Match $match): array
     {
+        $callback = $match->getCallback();
+
         switch (gettype($callback)) {
             case TYPE_ARRAY:
                 if (isset($callback[0]) && isset($callback[1])) {
@@ -182,7 +169,7 @@ class Handler extends Response
             case TYPE_STRING:
                 $peaces = explode(Kernel::options('separator'), $callback);
                 $class = $peaces[0];
-                $method = camelize(substr($this->match()->getUri(), 1, -1), false);
+                $method = camelize(substr($match->getUri(), 1, -1), false);
                 if (isset($peaces[1])) {
                     $method = $peaces[1];
                 }
@@ -195,28 +182,30 @@ class Handler extends Response
     }
 
     /**
-     * @param $callable
-     * @param $method
+     * @param Match $match
+     * @param $instance (null)
+     * @param $method (null)
      * @return array
      */
-    private function parameters($callable, $method = null)
+    private function parameters($match, $instance = null, $method = null)
     {
-        $data = is_array($this->match()->getParameters()) ? $this->match()->getParameters() : [];
-        $options = $this->match()->getOptions();
+        $data = is_array($match->getParameters()) ? $match->getParameters() : [];
+        $options = $match->getOptions();
 
         $labels = isset($options['labels']) ? $options['labels'] : true;
         if ($method) {
-            return Container::instance()->resolveMethodParameters($callable, $method, $data, $labels);
+            return Container::instance()->resolveMethodParameters($instance, $method, $data, $labels);
         }
-        return Container::instance()->resolveFunctionParameters($callable, $data, $labels);
+        return Container::instance()->resolveFunctionParameters($match->getCallback(), $data, $labels);
     }
 
     /**
+     * @param Match $match
      * @param $callback
-     * @param array $parameters
+     * @param $parameters
      * @return Response
      */
-    private function call($callback, $parameters)
+    private function call(Match $match, $callback, $parameters)
     {
         ob_start();
         try {
@@ -231,16 +220,16 @@ class Handler extends Response
             Wrapper::buffer($contents);
         }
 
-        return $this->parse($result);
+        return $this->parse($match, $result);
     }
 
     /**
-     * @param $content
+     * @param Match $match
+     * @param Response|Throwable $content
      * @return Response
      */
-    private function parse($content): Response
+    private function parse(Match $match, $content): Response
     {
-        // TODO: organize usage of status codes
         $output = [];
         if (env('TEST_MODE')) {
             $output = Wrapper::messages();
@@ -251,11 +240,11 @@ class Handler extends Response
             return $content->meta('output', $output);
         }
 
-        $status = 200;
-        if (empty($this->match()->getPath()) || is_null($content)) {
-            $status = 404;
+        $status = Kernel::config('app.status.success');
+        if (empty($match->getPath()) || is_null($content)) {
+            $status = Kernel::config('app.status.notFound');
             if (is_null($content)) {
-                $status = 501; // not implemented
+                $status = Kernel::config('app.status.notImplemented');
             }
         }
 
@@ -263,7 +252,7 @@ class Handler extends Response
             'output' => $output
         ];
         if ($content instanceof Throwable) {
-            $status = 500;
+            $status = Kernel::config('app.status.fail');
             if ($content instanceof SimplesRunTimeError) {
                 $status = $content->getStatus();
             }
