@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Simples\Http\Request;
 use Simples\Http\Response;
 use Simples\Kernel\App as Kernel;
+use Simples\Kernel\Container;
 use Simples\Route\Match;
 use Simples\Route\Router;
 use Throwable;
@@ -51,8 +52,8 @@ class Http
      */
     public function handle(array $middlewares = []): Response
     {
-        // TODO: container
         $router = new Router(Kernel::options('labels'), Kernel::options('type'));
+        Container::instance()->register(Router::class, $router);
 
         $method = $this->request->getMethod();
         if ($this->request->hasHeader($this->headerAccessControlRequestMethod)) {
