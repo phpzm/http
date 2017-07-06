@@ -41,7 +41,7 @@ class Handler extends Response
     }
 
     /**
-     * Apply the middlewares to Match
+     * Apply the middleware's to Match
      *
      * @param Request $request
      * @param Match $match

@@ -42,6 +42,11 @@ class CrossOriginResourceSharing extends Middleware implements Contract
     private $origins = [];
 
     /**
+     * @var string
+     */
+    private $method = 'options';
+
+    /**
      * CrossOriginResourceSharing constructor.
      * @param array $origins ([])
      */
@@ -61,29 +66,23 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      */
     public function process(ServerRequestInterface $request, Delegate $delegate): ResponseInterface
     {
-        // validate if is a valid origin
-        $this->validate($request);
-
         // test if the method used in request is a pre-flight
         if ($this->isPreFlight($request)) {
+            // validate if is a valid origin
+            $this->validate($request);
             // get the Response in container
             $response = App::response();
-
             // configure the header of response
             $response = $this->configureResponse($request, $response);
-
             // clear the body of response and add headers to request be accepted
             $response = $this->configurePreFlight($request, $response);
-
             // early return with a response configured to be accepted by CORS control
             return $response;
         }
         // delegate the resolution of request
         $response = $delegate->process($request);
-
         // write headers to configure appropriately the CORS
         $response = $this->configureResponse($request, $response);
-
         // response processed by this middleware
         return $response;
     }
@@ -95,9 +94,11 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      */
     protected function validate(ServerRequestInterface $request): bool
     {
+        // test if the settings have hosts to filter
         if (count($this->origins) === 0) {
             return true;
         }
+        // test if host sent by header is valid
         $origin = $request->getHeader($this->headerOrigin);
         if (in_array($origin, $this->origins)) {
             return true;
@@ -111,7 +112,7 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      */
     protected function isPreFlight(ServerRequestInterface $request)
     {
-        return strtolower($request->getMethod()) === 'options';
+        return strtolower($request->getMethod()) === $this->method;
     }
 
     /**
