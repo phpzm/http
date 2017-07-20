@@ -10,7 +10,7 @@
   ],
   "homepage": "https://github.com/phpzm/http",
   "license": "MIT",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "type": "package",
   "authors": [
     {
@@ -24,9 +24,9 @@
   ],
   "require": {
     "php": ">=7.0",
-    "phpzm/helper": "^1.5.7",
-    "phpzm/kernel": "^1.7.0",
-    "phpzm/route": "^1.6.2",
+    "phpzm/helper": "^1.5.8",
+    "phpzm/kernel": "^1.7.1",
+    "phpzm/route": "^1.6.3",
     "psr/http-message": "^1.0"
   },
   "autoload": {
