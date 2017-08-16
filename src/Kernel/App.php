@@ -7,7 +7,6 @@ use Simples\Http\Response;
 use Simples\Kernel\App as Kernel;
 use Simples\Http\Request;
 use Simples\Kernel\Container;
-use Simples\Persistence\Transaction;
 use Throwable;
 
 /**
@@ -56,7 +55,12 @@ class App
      */
     private static function commit()
     {
-        if (!Transaction::commit()) {
+        $transaction = '\\Simples\\Persistence\\Transaction';
+        if (!class_exists($transaction)) {
+            return;
+        }
+        /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection, PhpUndefinedMethodInspection */
+        if (!$transaction::commit()) {
             throw new ErrorException("Transaction can't commit the changes");
         }
     }
