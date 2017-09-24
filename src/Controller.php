@@ -104,7 +104,7 @@ abstract class Controller
     }
 
     /**
-     * @param null $content
+     * @param mixed $content (null)
      * @param array $meta
      * @param int $code
      * @return Response
