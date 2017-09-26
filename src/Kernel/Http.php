@@ -118,8 +118,13 @@ class Http
         http_response_code($response->getStatusCode());
 
         $contents = $response->getBody()->getContents();
-        if ($contents) {
-            out($contents);
+        if (!$contents) {
+            return;
         }
+        $output = config('http.output');
+        if ($output) {
+            $output($contents);
+        }
+        out($contents);
     }
 }
