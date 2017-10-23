@@ -121,10 +121,11 @@ class Http
         if (!$contents) {
             return;
         }
-        $output = config('http.output');
-        if ($output) {
-            $output($contents);
+        $output = 'out';
+        /** @noinspection PhpAssignmentInConditionInspection */
+        if ($http_output = config('http.output')) {
+            $output = $http_output;
         }
-        out($contents);
+        $output($contents);
     }
 }
