@@ -37,23 +37,9 @@ class CrossOriginResourceSharing extends Middleware implements Contract
     private $headerAccessControlRequestMethod = 'Access-Control-Request-Method';
 
     /**
-     * @var array
-     */
-    private $origins = [];
-
-    /**
      * @var string
      */
     private $method = 'options';
-
-    /**
-     * CrossOriginResourceSharing constructor.
-     * @param array $origins ([])
-     */
-    public function __construct($origins = [])
-    {
-        $this->origins = $origins;
-    }
 
     /**
      * Process an incoming server request and return a response, optionally delegating
@@ -94,13 +80,14 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      */
     protected function validate(ServerRequestInterface $request): bool
     {
+        $origins = config('cors.origins');
         // test if the settings have hosts to filter
-        if (count($this->origins) === 0) {
+        if (count($origins) === 0) {
             return true;
         }
         // test if host sent by header is valid
         $origin = $request->getHeader($this->headerOrigin);
-        if (in_array($origin, $this->origins)) {
+        if (in_array($origin, $origins)) {
             return true;
         }
         throw new SimplesForbiddenError("The origin `{$origin}` is not allowed");
@@ -120,16 +107,13 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    protected function configurePreFlight(
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ): ResponseInterface {
+    protected function configurePreFlight(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
         $accessControlAllowMethods = $request->getHeader($this->headerAccessControlRequestMethod);
         $accessControlAllowHeaders = $request->getHeader($this->headerAccessControlRequestHeaders);
         return $response
-            ->plain('')
-            ->header('Access-Control-Allow-Methods', $accessControlAllowMethods)
-            ->header('Access-Control-Allow-Headers', $accessControlAllowHeaders);
+            ->withHeader('Access-Control-Allow-Methods', $accessControlAllowMethods)
+            ->withHeader('Access-Control-Allow-Headers', $accessControlAllowHeaders);
     }
 
     /**
@@ -137,14 +121,22 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    protected function configureResponse(
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ): ResponseInterface {
-        $origin = $request->getHeader($this->headerOrigin);
+    protected function configureResponse(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        $origin = '*';
+        $origins = config('cors.origins');
+        if (is_array($origins) && count($origins)) {
+            $origin = $request->getHeader($this->headerOrigin);
+        }
+        $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
+
+        $exposes = config('cors.exposes');
+        if (is_array($exposes) && count($exposes)) {
+            $response = $response->withHeader('Access-Control-Expose-Headers', implode(',', $exposes));
+        }
+
         return $response
-            ->header('Access-Control-Allow-Origin', $origin)
-            ->header('Access-Control-Allow-Credentials', 'true')
-            ->header('Access-Control-Max-Age', '86400');
+            ->withHeader('Access-Control-Allow-Credentials', 'true')
+            ->withHeader('Access-Control-Max-Age', '86400');
     }
 }
