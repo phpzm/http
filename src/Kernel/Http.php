@@ -112,20 +112,17 @@ class Http
     {
         $headers = $response->getHeaders();
         foreach ($headers as $name => $value) {
+            if (is_array($value)) {
+                $value = implode(',', $value);
+            }
             header(implode(':', [$name, $value]), true);
         }
 
         http_response_code($response->getStatusCode());
 
         $contents = $response->getBody()->getContents();
-        if (!$contents) {
-            return;
+        if ($contents) {
+            out($contents);
         }
-        $output = 'out';
-        /** @noinspection PhpAssignmentInConditionInspection */
-        if ($http_output = config('http.output')) {
-            $output = $http_output;
-        }
-        $output($contents);
     }
 }
