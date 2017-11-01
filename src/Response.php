@@ -145,9 +145,9 @@ class Response extends ResponseStream
     public function api($data, $code = null, $meta = [])
     {
         $json = [
-            'body' => $data,
-            'meta' => $meta,
-            'status' => $this->parseStatus($code ?? $this->getStatusCode()),
+            config('http.body') => $data,
+            config('http.meta') => $meta,
+            config('http.status') => $this->parseStatus($code ?? $this->getStatusCode()),
         ];
 
         return $this->json($json, $code);
