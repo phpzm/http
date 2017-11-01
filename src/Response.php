@@ -145,7 +145,7 @@ class Response extends ResponseStream
     public function api($data, $code = null, $meta = [])
     {
         $json = [
-            'data' => $data,
+            'body' => $data,
             'meta' => $meta,
             'status' => $this->parseStatus($code ?? $this->getStatusCode()),
         ];
