@@ -2,9 +2,10 @@
 
 namespace Simples\Http;
 
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use \InvalidArgumentException;
+use function json_decode;
 
 /**
  * Class ResponseStream
@@ -262,8 +263,9 @@ class ResponseStream implements ResponseInterface
             $value = [$value];
         }
         if (!is_array($value)) {
+            $fail = json_decode($value);
             throw new InvalidArgumentException(
-                'Invalid header value; must be a string or array of strings'
+                "Invalid header value `{$fail}` to `{$name}`; must be a string or array of strings"
             );
         }
 
