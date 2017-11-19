@@ -107,8 +107,10 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    protected function configurePreFlight(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
+    protected function configurePreFlight(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ): ResponseInterface {
         $accessControlAllowMethods = $request->getHeader($this->headerAccessControlRequestMethod);
         $accessControlAllowHeaders = $request->getHeader($this->headerAccessControlRequestHeaders);
         return $response
@@ -121,8 +123,10 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    protected function configureResponse(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
+    protected function configureResponse(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ): ResponseInterface {
         $origin = '*';
         $origins = config('cors.origins');
         if (is_array($origins) && count($origins)) {
