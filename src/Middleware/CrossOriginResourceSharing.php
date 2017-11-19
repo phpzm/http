@@ -52,6 +52,12 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      */
     public function process(ServerRequestInterface $request, Delegate $delegate): ResponseInterface
     {
+        // if not is CORS
+        if (!$this->isCORS($request)) {
+            // early return
+            return $delegate->process($request);
+        }
+
         // test if the method used in request is a pre-flight
         if ($this->isPreFlight($request)) {
             // validate if is a valid origin
@@ -62,6 +68,7 @@ class CrossOriginResourceSharing extends Middleware implements Contract
             $response = $this->configureResponse($request, $response);
             // clear the body of response and add headers to request be accepted
             $response = $this->configurePreFlight($request, $response);
+
             // early return with a response configured to be accepted by CORS control
             return $response;
         }
@@ -100,6 +107,15 @@ class CrossOriginResourceSharing extends Middleware implements Contract
     protected function isPreFlight(ServerRequestInterface $request)
     {
         return strtolower($request->getMethod()) === $this->method;
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return bool
+     */
+    private function isCORS(ServerRequestInterface $request)
+    {
+        return $request->hasHeader($this->headerOrigin);
     }
 
     /**
