@@ -39,7 +39,7 @@ class CrossOriginResourceSharing extends Middleware implements Contract
     /**
      * @var string
      */
-    private $method = 'options';
+    const PRE_FLIGHT = 'options';
 
     /**
      * Process an incoming server request and return a response, optionally delegating
@@ -106,14 +106,14 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      */
     protected function isPreFlight(ServerRequestInterface $request)
     {
-        return strtolower($request->getMethod()) === $this->method;
+        return strtolower($request->getMethod()) === static::PRE_FLIGHT;
     }
 
     /**
      * @param ServerRequestInterface $request
      * @return bool
      */
-    private function isCORS(ServerRequestInterface $request)
+    public function isCORS(ServerRequestInterface $request)
     {
         return $request->hasHeader($this->headerOrigin);
     }
@@ -129,6 +129,11 @@ class CrossOriginResourceSharing extends Middleware implements Contract
     ): ResponseInterface {
         $accessControlAllowMethods = $request->getHeader($this->headerAccessControlRequestMethod);
         $accessControlAllowHeaders = $request->getHeader($this->headerAccessControlRequestHeaders);
+
+        if (!$accessControlAllowMethods || !$accessControlAllowHeaders) {
+            return $response;
+        }
+
         return $response
             ->withHeader('Access-Control-Allow-Methods', $accessControlAllowMethods)
             ->withHeader('Access-Control-Allow-Headers', $accessControlAllowHeaders);
