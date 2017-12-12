@@ -6,6 +6,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use Simples\Error\SimplesRunTimeError;
 use Simples\Http\Kernel\Http;
 
 /**
@@ -74,24 +75,26 @@ class Request implements RequestInterface, ServerRequestInterface
 
     /**
      * @return $this
+     * @throws SimplesRunTimeError
      */
     public function fromServer()
     {
-        $this->getMethodFromServer();
+        $this->extractMethodFromServer();
 
-        $this->getHeadersFromServer();
+        $this->extractHeadersFromServer();
 
-        $this->getUrlFromServer();
+        $this->extractUrlFromServer();
 
-        $this->getDataFromServer();
+        $this->extractDataFromServer();
 
         return $this;
     }
 
     /**
      * @return $this
+     * @throws SimplesRunTimeError
      */
-    private function getMethodFromServer()
+    private function extractMethodFromServer()
     {
         $method = server('REQUEST_METHOD');
         $method = coalesce(get('_method'), $method);
@@ -102,23 +105,18 @@ class Request implements RequestInterface, ServerRequestInterface
     }
 
     /**
-     * @return $this
-     * @SuppressWarnings("Superglobals")
+     * @return Request
      */
-    private function getHeadersFromServer()
+    private function extractHeadersFromServer()
     {
-        foreach ($_SERVER as $name => $value) {
-            if (substr($name, 0, 5) == 'HTTP_') {
-                $this->headers[headerify(substr($name, 5))] = $value;
-            }
-        }
+        $this->headers = getallheaders();
         return $this;
     }
 
     /**
      * @return $this
      */
-    private function getUrlFromServer()
+    private function extractUrlFromServer()
     {
         $self = str_replace('index.php/', '', server('PHP_SELF'));
         $uri = server('REQUEST_URI') ? explode('?', server('REQUEST_URI'))[0] : '';
@@ -143,7 +141,7 @@ class Request implements RequestInterface, ServerRequestInterface
      * @return $this
      * @SuppressWarnings("Superglobals")
      */
-    private function getDataFromServer()
+    private function extractDataFromServer()
     {
         $_PAYLOAD = (array)json_decode(file_get_contents("php://input"));
         if (!$_PAYLOAD) {
