@@ -96,7 +96,7 @@ class ResponseStream implements ResponseInterface
         429 => 'Too Many Requests',
         431 => 'Request Header Fields Too Large',
         // SERVER ERROR
-        500 => 'Internal Server Erro',
+        500 => 'Internal Server Error',
         501 => 'Not Implemented',
         502 => 'Bad Http',
         503 => 'Service Unavailable',
