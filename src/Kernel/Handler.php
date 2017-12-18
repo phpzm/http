@@ -187,13 +187,21 @@ class Handler extends Response
      * @param $method (null)
      * @return array
      */
-    private function parameters($match, $instance = null, $method = null)
+    private function parameters(Match $match, $instance = null, $method = null)
     {
         $data = is_array($match->getParameters()) ? $match->getParameters() : [];
         $options = $match->getOptions();
 
-        $labels = isset($options['labels']) ? $options['labels'] : true;
-        if ($method) {
+        if ($parameters = off($options, 'parameters')) {
+            if (is_callable($parameters)) {
+                $parameters = $parameters($data);
+            }
+            $data = array_merge_recursive($data, $parameters);
+        }
+
+        $labels = off($options, 'labels', true);
+
+        if ($instance && $method) {
             return Container::instance()->resolveMethodParameters($instance, $method, $data, $labels);
         }
         return Container::instance()->resolveFunctionParameters($match->getCallback(), $data, $labels);
@@ -201,8 +209,8 @@ class Handler extends Response
 
     /**
      * @param Match $match
-     * @param $callback
-     * @param $parameters
+     * @param callable $callback
+     * @param array $parameters
      * @return Response
      */
     private function call(Match $match, $callback, $parameters)
