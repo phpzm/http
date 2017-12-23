@@ -3,6 +3,7 @@
 namespace Simples\Http\Request;
 
 use Psr\Http\Message\StreamInterface;
+use Simples\Http\Input;
 
 /**
  * Trait Body
