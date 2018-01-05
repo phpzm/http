@@ -3,6 +3,7 @@
 namespace Simples\Http\Kernel;
 
 use Psr\Http\Message\ResponseInterface;
+use Simples\Error\SimplesRunTimeError;
 use Simples\Http\Request;
 use Simples\Http\Response;
 use Simples\Kernel\App as Kernel;
@@ -10,6 +11,7 @@ use Simples\Kernel\Container;
 use Simples\Route\Match;
 use Simples\Route\Router;
 use Throwable;
+use function is_array;
 
 /**
  * Class Http
@@ -49,6 +51,7 @@ class Http
     /**
      * @param array $middlewares
      * @return ResponseInterface|Response
+     * @throws SimplesRunTimeError
      */
     public function handle(array $middlewares = []): Response
     {
@@ -71,15 +74,19 @@ class Http
      * @param Router $router The router what will be used
      * @param array $files (null) If not informe will be used "route.files"
      * @return Router Object with the routes loaded in
+     * @throws SimplesRunTimeError
      */
     public static function routes(Router $router, array $files = null)
     {
-        $files = $files ? $files : Kernel::config('route.files');
-
+        if (!$files) {
+            $files = Kernel::config('route.files');
+        }
+        if (!is_array($files)) {
+            return $router;
+        }
         foreach ($files as $file) {
             $router->load(path(true, $file));
         }
-
         return $router;
     }
 
