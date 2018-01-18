@@ -47,6 +47,7 @@ class Handler extends Response
      * @param Match $match
      * @param array $middlewares ([])
      * @return ResponseInterface
+     * @throws SimplesRunTimeError
      */
     public function apply(Request $request, Match $match, array $middlewares = [])
     {
@@ -88,6 +89,7 @@ class Handler extends Response
      * @param Request $request
      * @param Match $match
      * @return Response
+     * @throws SimplesRunTimeError
      */
     final private function resolve(Request $request, Match $match)
     {
@@ -186,12 +188,14 @@ class Handler extends Response
      * @param $instance (null)
      * @param $method (null)
      * @return array
+     * @throws SimplesRunTimeError
      */
     private function parameters(Match $match, $instance = null, $method = null)
     {
         $data = is_array($match->getParameters()) ? $match->getParameters() : [];
         $options = $match->getOptions();
 
+        /** @noinspection PhpAssignmentInConditionInspection */
         if ($parameters = off($options, 'parameters')) {
             if (is_callable($parameters)) {
                 $parameters = $parameters($data);
