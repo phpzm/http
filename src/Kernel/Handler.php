@@ -2,6 +2,8 @@
 
 namespace Simples\Http\Kernel;
 
+use function count;
+use function explode;
 use Psr\Http\Message\ResponseInterface;
 use Simples\Error\SimplesRunTimeError;
 use Simples\Http\Controller;
@@ -12,6 +14,7 @@ use Simples\Kernel\App as Kernel;
 use Simples\Kernel\Container;
 use Simples\Kernel\Wrapper;
 use Simples\Route\Match;
+use function strpos;
 use Throwable;
 
 /**
@@ -47,7 +50,6 @@ class Handler extends Response
      * @param Match $match
      * @param array $middlewares ([])
      * @return ResponseInterface
-     * @throws SimplesRunTimeError
      */
     public function apply(Request $request, Match $match, array $middlewares = [])
     {
@@ -89,7 +91,6 @@ class Handler extends Response
      * @param Request $request
      * @param Match $match
      * @return Response
-     * @throws SimplesRunTimeError
      */
     final private function resolve(Request $request, Match $match)
     {
@@ -178,8 +179,11 @@ class Handler extends Response
                     ];
                 }
                 $pieces = array_values(array_filter(explode('/', $match->getUri())));
-                $uri = $pieces[0];
-                if (count($pieces)) {
+                $uri = '';
+                if (isset($pieces[0])) {
+                    $uri = $pieces[0];
+                }
+                if (count($pieces) > 1) {
                     $uri = $pieces[count($pieces) - 1];
                 }
                 return [
@@ -195,14 +199,12 @@ class Handler extends Response
      * @param $instance (null)
      * @param $method (null)
      * @return array
-     * @throws SimplesRunTimeError
      */
     private function parameters(Match $match, $instance = null, $method = null)
     {
         $data = is_array($match->getParameters()) ? $match->getParameters() : [];
         $options = $match->getOptions();
 
-        /** @noinspection PhpAssignmentInConditionInspection */
         if ($parameters = off($options, 'parameters')) {
             if (is_callable($parameters)) {
                 $parameters = $parameters($data);
@@ -284,3 +286,4 @@ class Handler extends Response
         return $this->$method($content, $status, $meta);
     }
 }
+
