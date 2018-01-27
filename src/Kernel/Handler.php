@@ -170,7 +170,7 @@ class Handler extends Response
                 break;
             case TYPE_STRING:
                 $pieces = explode(Kernel::options('separator'), $callback);
-                $class = $peaces[0];
+                $class = $pieces[0];
                 if (isset($pieces[1])) {
                     return [
                         'class' => $class,
