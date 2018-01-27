@@ -169,15 +169,22 @@ class Handler extends Response
                 }
                 break;
             case TYPE_STRING:
-                $peaces = explode(Kernel::options('separator'), $callback);
+                $pieces = explode(Kernel::options('separator'), $callback);
                 $class = $peaces[0];
-                $method = camelize(substr($match->getUri(), 1, -1), false);
-                if (isset($peaces[1])) {
-                    $method = $peaces[1];
+                if (isset($pieces[1])) {
+                    return [
+                        'class' => $class,
+                        'method' => $pieces[1]
+                    ];
+                }
+                $pieces = array_values(array_filter(explode('/', $match->getUri())));
+                $uri = $pieces[0];
+                if (count($pieces)) {
+                    $uri = $pieces[count($pieces) - 1];
                 }
                 return [
                     'class' => $class,
-                    'method' => $method
+                    'method' => camelize($uri, false)
                 ];
         }
         return [];
