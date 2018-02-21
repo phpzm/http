@@ -11,7 +11,6 @@ use Simples\Kernel\Container;
 use Simples\Route\Match;
 use Simples\Route\Router;
 use Throwable;
-use function is_array;
 
 /**
  * Class Http
@@ -78,15 +77,12 @@ class Http
      */
     public static function routes(Router $router, array $files = null)
     {
-        if (!$files) {
-            $files = Kernel::config('route.files');
-        }
-        if (!is_array($files)) {
-            return $router;
-        }
+        $files = $files ? $files : Kernel::config('route.files');
+
         foreach ($files as $file) {
             $router->load(path(true, $file));
         }
+
         return $router;
     }
 

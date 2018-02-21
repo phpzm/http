@@ -286,4 +286,3 @@ class Handler extends Response
         return $this->$method($content, $status, $meta);
     }
 }
-
