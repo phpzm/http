@@ -3,9 +3,9 @@
 namespace Simples\Http\Kernel;
 
 use ErrorException;
+use Simples\Http\Request;
 use Simples\Http\Response;
 use Simples\Kernel\App as Kernel;
-use Simples\Http\Request;
 use Simples\Kernel\Container;
 use Throwable;
 
@@ -55,10 +55,16 @@ class App
      */
     private static function commit()
     {
-        $transaction = '\\Simples\\Persistence\\Transaction';
+        $transaction = env('SIMPLES_TRANSACTION_CLASS', '\\Simples\\Persistence\\Transaction');
         if (!class_exists($transaction)) {
             return;
         }
+
+        if (!method_exists($transaction, 'commit')) {
+            throw new ErrorException("The transaction commit method was not found");
+
+        }
+
         /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection, PhpUndefinedMethodInspection */
         if (!$transaction::commit()) {
             throw new ErrorException("Transaction can't commit the changes");

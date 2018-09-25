@@ -229,11 +229,8 @@ class Handler extends Response
     private function call(Match $match, $callback, $parameters)
     {
         ob_start();
-        try {
-            $result = call_user_func_array($callback, $parameters);
-        } catch (Throwable $throw) {
-            $result = $throw;
-        }
+
+        $result = call_user_func_array($callback, $parameters);
 
         $contents = ob_get_contents();
         if ($contents) {
