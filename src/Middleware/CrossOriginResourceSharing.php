@@ -2,6 +2,7 @@
 
 namespace Simples\Http\Middleware;
 
+use Simples\Error\NotFoundExceptionInterface;
 use Simples\Http\Kernel\App;
 use Simples\Kernel\Middleware;
 use Simples\Http\Contract\Middleware as Contract;
@@ -49,6 +50,8 @@ class CrossOriginResourceSharing extends Middleware implements Contract
      * @param Delegate $delegate
      *
      * @return ResponseInterface
+     * @throws SimplesForbiddenError
+     * @throws NotFoundExceptionInterface
      */
     public function process(ServerRequestInterface $request, Delegate $delegate): ResponseInterface
     {
