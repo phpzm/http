@@ -103,9 +103,7 @@ class Http
         }
         $this->match->setCallback($fail);
 
-        $handler = new Handler();
-
-        return $handler->apply($this->request, $this->match);
+        return (new Handler)->apply($this->request, $this->match);
     }
 
     /**
