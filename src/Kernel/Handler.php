@@ -3,9 +3,12 @@
 namespace Simples\Http\Kernel;
 
 use function count;
+use ErrorException;
+use Exception;
 use function explode;
 use Psr\Http\Message\ResponseInterface;
 use Simples\Error\SimplesRunTimeError;
+use Simples\Http\Contract\ErrorHandler;
 use Simples\Http\Controller;
 use Simples\Http\Middleware\HttpResponse;
 use Simples\Http\Request;
@@ -50,6 +53,7 @@ class Handler extends Response
      * @param Match $match
      * @param array $middlewares ([])
      * @return ResponseInterface
+     * @throws SimplesRunTimeError
      */
     public function apply(Request $request, Match $match, array $middlewares = [])
     {
@@ -91,6 +95,8 @@ class Handler extends Response
      * @param Request $request
      * @param Match $match
      * @return Response
+     * @throws SimplesRunTimeError
+     * @throws Exception
      */
     final private function resolve(Request $request, Match $match)
     {
@@ -117,6 +123,7 @@ class Handler extends Response
      * @param Match $match
      * @return Response
      * @throws SimplesRunTimeError
+     * @throws Exception
      */
     private function controller(Request $request, Match $match)
     {
@@ -199,6 +206,7 @@ class Handler extends Response
      * @param $instance (null)
      * @param $method (null)
      * @return array
+     * @throws SimplesRunTimeError
      */
     private function parameters(Match $match, $instance = null, $method = null)
     {
@@ -225,6 +233,7 @@ class Handler extends Response
      * @param callable $callback
      * @param array $parameters
      * @return Response
+     * @throws Exception
      */
     private function call(Match $match, $callback, $parameters)
     {
@@ -245,6 +254,7 @@ class Handler extends Response
      * @param Match $match
      * @param Response|Throwable $content
      * @return Response
+     * @throws Exception
      */
     private function parse(Match $match, $content): Response
     {
@@ -270,16 +280,25 @@ class Handler extends Response
             'output' => $output
         ];
         if ($content instanceof Throwable) {
-            $status = Kernel::config('app.status.fail');
-            if ($content instanceof SimplesRunTimeError) {
-                $status = $content->getStatus();
-            }
-            $meta = array_merge($meta, error_format($content));
-            $content = throw_format($content);
+            $errorHandler = $this->errorHandler();
+            $status = $errorHandler->status($content, $meta);
+            $meta = $errorHandler->meta($content, $meta);
+            $content = $errorHandler->content($content, $meta);
         }
 
         $method = Kernel::options('type');
 
         return $this->$method($content, $status, $meta);
+    }
+
+    /**
+     * @return mixed
+     * @throws SimplesRunTimeError
+     */
+    protected function errorHandler(): ErrorHandler
+    {
+        $errorHandler = env('SIMPLES_ERROR_HANDLER_CLASS', '\\Simples\\Http\\Kernel\\ErrorHandler');
+
+        return Container::instance()->make($errorHandler);
     }
 }
