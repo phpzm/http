@@ -2,7 +2,9 @@
 
 namespace Simples\Http;
 
+use Simples\Error\SimplesRunTimeError;
 use Simples\Helper\JSON;
+use Throwable;
 
 /**
  * @method Response atom($data, $code = 200)
@@ -68,6 +70,11 @@ class Response extends ResponseStream
     const CONTENT_TYPE_API = 'api';
 
     /**
+     * @var Throwable
+     */
+    private $error;
+
+    /**
      * @var array
      */
     protected static $CONTENT_TYPES = [
@@ -106,6 +113,7 @@ class Response extends ResponseStream
      * @param $name
      * @param $arguments
      * @return $this
+     * @throws SimplesRunTimeError
      */
     public function __call($name, $arguments)
     {
@@ -122,6 +130,7 @@ class Response extends ResponseStream
     /**
      * @param $data
      * @return string
+     * @throws SimplesRunTimeError
      */
     public function toString($data)
     {
@@ -157,6 +166,7 @@ class Response extends ResponseStream
      * @param $property
      * @param $value
      * @return $this
+     * @throws SimplesRunTimeError
      */
     public function meta($property, $value)
     {
@@ -230,6 +240,9 @@ class Response extends ResponseStream
      */
     public function isSuccess()
     {
+        if ($this->error) {
+            return false;
+        }
         return $this->getStatusType($this->getStatusCode()) === 'success';
     }
 
@@ -247,5 +260,21 @@ class Response extends ResponseStream
     public function isError()
     {
         return $this->getStatusType($this->getStatusCode()) === 'error';
+    }
+
+    /**
+     * @return Throwable
+     */
+    public function getError()
+    {
+        return $this->error;
+    }
+
+    /**
+     * @param Throwable $error
+     */
+    public function setError(Throwable $error)
+    {
+        $this->error = $error;
     }
 }
